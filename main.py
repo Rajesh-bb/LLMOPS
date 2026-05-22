@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Dict, List
-from fastapi import FastAPI, File, UploadFile,HTTPException,Requests
+from fastapi import FastAPI, File, UploadFile,HTTPException,Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,8 +56,8 @@ def health() -> Dict[str,str]:
     return {"status" : "ok"}
 
 @app.get("/", response_class = HTMLResponse)
-def home(request: Requests) -> HTMLResponse:
-    return templates.TemplateResponse("index.html",)
+def home(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("index.html",{"request": request})
 
 
 @app.post("/upload",response_model = UploadResponse)
@@ -75,6 +75,8 @@ async def upload(files: List[UploadFile] = File(...)) -> UploadResponse:
        
         ingestor.built_retriver(
             uploaded_files=wrapped_files,
+            chunk_size=2000,
+            chunk_overlap = 100,
             search_type="mmr",
             fetch_k=20,
             lambda_mult=0.5

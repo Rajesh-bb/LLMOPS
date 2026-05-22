@@ -28,6 +28,7 @@ dependencies = [
     "python-multipart==0.0.20",
     "pyyaml>=6.0.3",
     "sentence-transformers>=5.5.0",
+    "streamlit>=1.57.0",
     "structlog>=25.5.0",
     "uvicorn==0.32.1",
 ]
