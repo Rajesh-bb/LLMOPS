@@ -24,6 +24,7 @@ dependencies = [
     "openai>=1.109.1",
     "pandas>=3.0.3",
     "pypdf>=6.11.0",
+    "pytest>=9.0.3",
     "python-dotenv==1.1.1",
     "python-multipart==0.0.20",
     "pyyaml>=6.0.3",
