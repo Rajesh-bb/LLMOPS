@@ -10,7 +10,7 @@ load_dotenv()
 def test_document_ingestion_and_rag():
     try:
         test_files = [
-            r"C:\Users\Rajesh\Desktop\ml\world_war_ii_comprehensive_report.txt",
+            r"C:\Users\Rajesh\Downloads\global_semiconductor_industry_report.txt",
         ]
 
         uploaded_files = []
