@@ -13,6 +13,8 @@ from multi_doc_chat.exception.custom_exception import DocumentPortalException
 from multi_doc_chat.logger.customlogger import CustomLogger 
 from multi_doc_chat.prompts.prompt_library import PROMPT_REGISTRY
 from multi_doc_chat.model.models import PromptType, ChatAnswer
+from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
+from langchain_cohere import CohereRerank
 from pydantic import ValidationError
 
 log = CustomLogger().get_logger(__name__)
@@ -167,7 +169,30 @@ class ConversationalRAG:
                 | self.llm
                 | StrOutputParser()
             )
-            retrieve_docs = question_rewriter | self.retriever | self._format_docs
+
+            compressor = CohereRerank(
+                    model="rerank-english-v3.0",
+                    top_n=3
+                )
+            log.info(
+                "Cohere reranker initialized successfully",
+                model="rerank-english-v3.0",
+                top_n=3,
+                session_id=self.session_id,
+                )
+
+
+            compression_retriever = ContextualCompressionRetriever(
+                    base_compressor=compressor,
+                    base_retriever=self.retriever
+                
+                )
+            
+            log.info(
+            "Contextual compression retriever created successfully",
+            session_id=self.session_id,
+            )
+            retrieve_docs = question_rewriter | compression_retriever | self._format_docs
             self.chain = (
                 {
                     "context": retrieve_docs,

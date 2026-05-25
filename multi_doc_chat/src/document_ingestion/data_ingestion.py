@@ -12,6 +12,8 @@ import uuid
 from datetime import datetime
 from multi_doc_chat.utils.file_io import save_uploaded_files
 from multi_doc_chat.utils.document_ops import load_documents
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers.ensemble import EnsembleRetriever
 import hashlib
 import sys
 
@@ -97,15 +99,56 @@ class ChatIngestor:
             log.info("FAISS index updated", added=added, index=str(self.faiss_dir))
 
             # Configure search parameters based on search type
+            # -------------------------------------------------
+# FAISS RETRIEVER
+# -------------------------------------------------
+
             search_kwargs = {"k": k}
-            
+
             if search_type == "mmr":
-                # MMR needs fetch_k (docs to fetch) and lambda_mult (diversity parameter)
+
                 search_kwargs["fetch_k"] = fetch_k
                 search_kwargs["lambda_mult"] = lambda_mult
-                log.info("Using MMR search", k=k, fetch_k=fetch_k, lambda_mult=lambda_mult)
-            
-            return vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
+
+                log.info(
+                    "Using MMR search",
+                    k=k,
+                    fetch_k=fetch_k,
+                    lambda_mult=lambda_mult
+                )
+
+            faiss_retriever = vs.as_retriever(
+                search_type=search_type,
+                search_kwargs=search_kwargs
+            )
+
+            # -------------------------------------------------
+            # BM25 KEYWORD RETRIEVER
+            # -------------------------------------------------
+
+            bm25_retriever = BM25Retriever.from_documents(chunks)
+
+            bm25_retriever.k = k
+
+            # -------------------------------------------------
+            # HYBRID RETRIEVER
+            # -------------------------------------------------
+
+            hybrid_retriever = EnsembleRetriever(
+                retrievers=[
+                    faiss_retriever,
+                    bm25_retriever
+                ],
+                weights=[0.7, 0.3]
+            )
+
+            log.info(
+                "Hybrid retriever created",
+                dense_weight=0.7,
+                keyword_weight=0.3
+            )
+
+            return hybrid_retriever
 
         except Exception as e:
             log.error("Failed to build retriever", error=str(e))
